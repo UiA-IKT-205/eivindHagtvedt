@@ -1,21 +1,18 @@
  package no.uia.ikt205.pomodoro
 
 import android.annotation.SuppressLint
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.CountDownTimer
 import android.text.Editable
 import android.text.TextWatcher
-import android.view.View
 import android.widget.*
-import android.widget.SeekBar.OnSeekBarChangeListener
+import androidx.appcompat.app.AppCompatActivity
 import no.uia.ikt205.pomodoro.util.millisecondsToDescriptiveTime
 
-class MainActivity : AppCompatActivity(), View.OnClickListener {
+ class MainActivity : AppCompatActivity(){
 
     lateinit var timer:CountDownTimer
     lateinit var startButton:Button
-    lateinit var resetButton:Button
 
     lateinit var setWorktimeDurationSeekBar:SeekBar
     lateinit var setPauseTimeDurationSeekBar:SeekBar
@@ -24,6 +21,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     lateinit var workTimeDurationDisplay:TextView
     lateinit var pauseTimeDurationDisplay:TextView
     lateinit var pauseOrWorkDisplay:TextView
+    lateinit var numberOfRepetitionsDisplay:TextView
 
     lateinit var writeRepetition:EditText
 
@@ -36,6 +34,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     var timeForWork = true
     var startButtonClicked = false
     var counter = 0
+    var repetitions = 0
 
     @SuppressLint("SetTextI18n")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -45,13 +44,13 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
        setWorktimeDurationSeekBar = findViewById<SeekBar>(R.id.setWorktimeDurationSeekBar)
        setPauseTimeDurationSeekBar = findViewById<SeekBar>(R.id.setPauseTimeDurationSeekBar)
 
-       resetButton = findViewById<Button>(R.id.resetButton)
        startButton = findViewById<Button>(R.id.startCountdownButton)
 
        workTimeDurationDisplay = findViewById<TextView>(R.id.workTimeDuration)
        pauseTimeDurationDisplay = findViewById<TextView>(R.id.pauseTimeDuration)
        pauseOrWorkDisplay = findViewById<TextView>(R.id.pauseOrWorkDisplay)
        writeRepetition = findViewById<EditText>(R.id.writeRepetition)
+       numberOfRepetitionsDisplay = findViewById<EditText>(R.id.numberOfRepetitionsDisplay)
 
         writeRepetition.addTextChangedListener(object: TextWatcher {
             override fun afterTextChanged(s: Editable) {
@@ -73,10 +72,10 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         //setting the work time duration
         setWorktimeDurationSeekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(p0: SeekBar?, p1: Int, p2: Boolean) {
-                if (!startButtonClicked) {
+
                     workDuration = setWorktimeDurationSeekBar.progress.toLong() * minute
                     workTimeDurationDisplay.text = millisecondsToDescriptiveTime(workDuration)
-                }
+
             }
 
             override fun onStartTrackingTouch(p0: SeekBar?) {
@@ -92,11 +91,10 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         //setting the pause time duration
         setPauseTimeDurationSeekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(p0: SeekBar?, p1: Int, p2: Boolean) {
-                if (!startButtonClicked) {
                     pauseDuration = setPauseTimeDurationSeekBar.progress.toLong() * minute
                     pauseTimeDurationDisplay.text = millisecondsToDescriptiveTime(pauseDuration)
 
-                }
+
             }
 
             override fun onStartTrackingTouch(p0: SeekBar?) {
@@ -112,22 +110,32 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
            if (!startButtonClicked) {
                startButtonClicked = true
                timeForWork = true
+               numberOfRepetitionsDisplay.text = "Repetitions: " + (numberOfRepetitions)
                counter = 1
                timeToCountDownInMs = workDuration
-               pauseOrWorkDisplay.text = "Arbeidsøkt"
+               pauseOrWorkDisplay.text = "Work"
+               startButton.text = "Stop"
+
                startCountDown()
            }
+           else {
+               timer.cancel()
+               startButtonClicked = false
+               startButton.text = "Start"
+               timeToCountDownInMs = 0L
+               updateCountDownDisplay(timeToCountDownInMs)
+               numberOfRepetitionsDisplay.text = ""
+
+
+           }
        }
-
-        resetButton.setOnClickListener(this)
-
 
        coutdownDisplay = findViewById<TextView>(R.id.countDownView)
 
     }
 
+    @SuppressLint("SetTextI18n")
     fun startCountDown() {
-
         if (numberOfRepetitions == 0){
             startButtonClicked = false
             counter = 0
@@ -145,21 +153,23 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                         counter = 0
                         Toast.makeText(this@MainActivity, "Siste arbeidsøkt er ferdig", Toast.LENGTH_SHORT).show()
                         pauseOrWorkDisplay.text = ""
-
+                        numberOfRepetitionsDisplay.text = ""
 
                     } else if (timeForWork) {
                         Toast.makeText(this@MainActivity, "Arbeidsøkt er ferdig", Toast.LENGTH_SHORT).show()
                         timeToCountDownInMs = pauseDuration
                         timeForWork = false
                         counter += 1
-                        pauseOrWorkDisplay.text = "Pause"
+                        pauseOrWorkDisplay.text = "Rest"
                         startCountDown()
                     } else {
                         Toast.makeText(this@MainActivity, "Back to work", Toast.LENGTH_SHORT).show()
                         timeToCountDownInMs = workDuration
                         timeForWork = true
                         counter += 1
-                        pauseOrWorkDisplay.text = "Arbeidsøkt"
+                        repetitions += 1
+                        pauseOrWorkDisplay.text = "Working"
+                        numberOfRepetitionsDisplay.text = "Repetitions: " + (numberOfRepetitions - repetitions)
                         startCountDown()
 
                     }
@@ -173,23 +183,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         }
     }
 
-    fun ifResetButtonClicked(){
-        if(startButtonClicked){
-            timer.cancel()
-            startButtonClicked = false
-        }
-    }
-
-    override fun onClick(view:View){
-        ifResetButtonClicked()
-        when (view) {
-            resetButton -> {
-                timeToCountDownInMs = 0
-            }
-
-        }
-        updateCountDownDisplay(timeToCountDownInMs)
-    }
 
     fun updateCountDownDisplay(timeInMs:Long){
         coutdownDisplay.text = millisecondsToDescriptiveTime(timeInMs)
