@@ -1,5 +1,4 @@
 package com.example.piano
-
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
@@ -35,9 +34,9 @@ class HalfTonePianoKeyFragment : Fragment() {
     ): View? {
 
         _binding = FragmentHalfTonePianoKeyBinding.inflate(inflater)
-        val br = binding.root
+        val view = binding.root
 
-        br.halfToneKey.setOnTouchListener(object: View.OnTouchListener{
+        view.halfToneKey.setOnTouchListener(object: View.OnTouchListener{
             override fun onTouch(v: View?, event: MotionEvent?): Boolean {
                 when(event?.action){
                     MotionEvent.ACTION_DOWN -> this@HalfTonePianoKeyFragment.onHalfToneKeyDown?.invoke(note)
@@ -47,7 +46,7 @@ class HalfTonePianoKeyFragment : Fragment() {
                 return true
             }
         })
-        return br
+        return view
     }
 
     companion object {
